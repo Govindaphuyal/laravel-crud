@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Post;
+use Illuminate\Support\Facades\File;
 
 class PostController extends Controller
 {
@@ -56,7 +57,12 @@ class PostController extends Controller
      */
     public function show(string $id)
     {
-        return "i am show";
+        $post = Post::query()->where('id', '=', $id)->first();
+
+    if (!$post) {
+        abort(404);
+    }
+        return view('posts.show',compact('post'));
     }
 
     /**
@@ -64,7 +70,11 @@ class PostController extends Controller
      */
     public function edit(string $id)
     {
-        return "i am edit";
+        $post=Post::query()->where('id','=',$id)->first();
+        if(!$post){
+            abort(404);
+        }
+        return view('posts.edit',compact('post'));
     }
 
     /**
@@ -72,7 +82,32 @@ class PostController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        return "i am update";
+        $post = Post::query()->where('id', '=', $id)->first();
+
+        if (!$post) {
+            abort(404);
+        }
+        
+        $request->validate([
+            'title' => 'required|string|min:2|max:100',
+            'url' => 'required|alpha_dash|min:2|max:100',
+            'image' => 'nullable|image|mimes:jpg,png,jpeg|max:2048'
+        ]);
+        
+        if ($request->file('image')) {
+            File::delete(public_path('uploads/' . $post->image));
+            $imageName = md5($request->image . time()) . '.' . $request->image->extension();
+            $request->file('image')->move(public_path('uploads'), $imageName);
+            $post->image = $imageName;
+        }
+        
+        $post->title = $request->title;
+        $post->url = $request->url;
+        
+        $post->save();
+        
+        return redirect()->route('posts.index');
+        
     }
 
     /**
@@ -80,6 +115,19 @@ class PostController extends Controller
      */
     public function destroy(string $id)
     {
-        return "i am destroy";
+        $post = Post::query()->where('id', '=', $id)->first();
+
+    if (!$post) {
+        abort(404);
+    }
+
+    // Delete associated image if exists
+    // if ($post->image && File::exists(public_path('uploads/' . $post->image))) {
+        File::delete(public_path('uploads/' . $post->image));
+    // }
+
+    $post->delete();
+
+    return redirect()->route('posts.index');
     }
 }

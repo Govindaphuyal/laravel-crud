@@ -30,13 +30,20 @@
         <th scope="row">{{ $loop->iteration }}</th>
         <td>{{ $post->title }}</td>
         <td>{{ $post->url }}</td>
-        <td><a target="_blank"href="{{asset('uploads/'.$post->image)}}">
+        <td>
+            <a target="_blank"href="{{asset('uploads/'.$post->image)}}">
 
             <img width="50" height="50" src="{{asset('uploads/'.$post->image)}}"/>
         </a>
         </td>
-        <td><a href=""class="btn btn-sm btn-primary">Edit</a>
-        <a class="btn btn-sm btn-danger">delete</a>
+        <td>
+        <a href="{{route('posts.edit',['post'=>$post->id])}}"class="btn btn-sm btn-primary">Edit</a>
+        <a href="{{route('posts.show',['post'=>$post->id])}}"class="btn btn-sm btn-info">Show</a>
+        <form onsubmit="return confirm('Are you sure?')"action="{{route('posts.destroy',['post'=>$post->id])}}" method="post"  class="d-inline">
+            @csrf
+            @method('DELETE')
+        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+</form>
     </td>
     </tr>
 @endforeach
